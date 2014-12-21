@@ -19,16 +19,17 @@ main = do
   state <- newMVar newServerState
   WS.runServer "0.0.0.0" 9160 $ application state
 
--- API Implementation
--- {{{
+  -- Explicitly return nothing
+  return ()
+
+-- API Implementation {{{
 api :: ScottyM ()
 api = get "/ping" $ do
   status status200
   text "back"
 -- }}}
 
--- Sockets Implementation
--- {{{
+-- Sockets Implementation {{{
 type Client = (Text, WS.Connection)
 type ServerState = [Client]
 
