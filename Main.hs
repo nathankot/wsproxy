@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import Web.Scotty
-import App (api)
+import qualified App
 import Util
 
 main :: IO ()
 main = do
   port <- getEnvWithDefault "PORT" "3636"
-  scotty (read port) api
+  scotty (read port) App.api
 
