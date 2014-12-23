@@ -4,6 +4,7 @@ module State
 , newServerState
 , addClient
 , removeClient
+, PushMessage
 ) where
 
 import Data.Text (Text)
@@ -12,11 +13,15 @@ import qualified Network.WebSockets as WS
 type Client = (Text, WS.Connection)
 type ServerState = [Client]
 
+data PushMessage = PushMessage { client :: Client
+                               , message :: Text
+                               }
+
 newServerState :: ServerState
 newServerState = []
 
 addClient :: Client -> ServerState -> ServerState
-addClient client clients = client:clients
+addClient c clients = c:clients
 
 removeClient :: Client -> ServerState -> ServerState
-removeClient client = filter ((/= fst client) . fst)
+removeClient c = filter ((/= fst c) . fst)
