@@ -23,6 +23,17 @@ executable wed-is-socket
                        scotty,
                        websockets,
                        http-types,
-                       text
+                       text,
+                       transformers,
+                       bytestring
   -- hs-source-dirs:
+  default-language:    Haskell2010
+
+executable socket-client-test
+  main-is:             Client.hs
+  build-depends:       base >= 4.7 && <4.8,
+                       websockets,
+                       text,
+                       network,
+                       mtl
   default-language:    Haskell2010
