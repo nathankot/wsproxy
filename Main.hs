@@ -21,8 +21,7 @@ main = do
     websocketPort <- read <$> getEnvWithDefault "PORT" "9160" :: IO Int
 
     -- Fork a websockets server
-    _ <- forkIO $ do
-      WS.runServer "0.0.0.0" websocketPort $ SOCKET.application state
+    _ <- forkIO $ WS.runServer "0.0.0.0" websocketPort $ SOCKET.application state
 
     -- Initialize scotty for our RESTFUL api
     scotty port $ API.application state
