@@ -11,7 +11,7 @@ import Control.Concurrent.MVar (newMVar, newEmptyMVar, readMVar)
 import Control.Concurrent (forkIO)
 import Control.Applicative ((<$>))
 import Control.Monad.IO.Class (liftIO)
-import Network.HTTP.Types (status200)
+import Network.HTTP.Types (status200, status400)
 import Data.Maybe (fromMaybe)
 import System.Environment (lookupEnv)
 import Control.Exception (finally)
@@ -62,9 +62,13 @@ main = do
 
     post "/push" $ do
       clients <- liftIO $ readMVar state
-      email <- param "email" :: ActionM T.Text
-      msg <- param "message" :: ActionM T.Text
+      email <- param "email" `rescue` const next :: ActionM T.Text
+      msg <- param "message" `rescue` const next :: ActionM T.Text
       _ <- sendMessage messenger msg $ findAllByEmail email clients
       status status200
       text "Acknowledged"
+
+    post "/push" $ do
+      status status400
+      text "This endpoint requires an email and message"
 
