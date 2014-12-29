@@ -8,7 +8,6 @@ import Control.Monad (forever)
 import Control.Exception (finally)
 import Data.Text (Text)
 import qualified Data.Text as T
-
 import qualified Network.WebSockets as WS
 
 -- Sockets Implementation {{{
@@ -16,43 +15,42 @@ import qualified Network.WebSockets as WS
 connectPrefix :: Text
 connectPrefix = T.pack "Connect:"
 
-application :: MVar ServerState -> WS.ServerApp
-application state pending = do
+application :: MVar ServerState -> Messenger -> WS.ServerApp
+application state messenger pending = do
     conn <- WS.acceptRequest pending
     WS.forkPingThread conn 30
     msg <- WS.receiveData conn :: IO Text
-
-    if connectPrefix `T.isPrefixOf` msg then
+    if isConnection msg then
       let email = T.drop (T.length connectPrefix) msg
-          client = (email, conn)
-      in finally (connect state client) (disconnect state client)
+          c = (email, conn)
+      in flip finally (disconnect state c) $ do
+        _ <- connect state c
+        listenToMessenger messenger
     else
       WS.sendTextData conn $ T.pack "Bad use of protocol"
 
     return ()
 
-connect :: MVar ServerState -> Client -> IO ()
-connect state client = do
-  let conn = snd client
-
-  -- First add the client to our state
-  _ <- modifyMVar state $ \s -> do
-    let s' = addClient client s
-    return (s', s')
-
-  _ <- forever $ do
-    msg <- WS.receiveData conn :: IO Text
-    WS.sendTextData conn msg
-
+listenToMessenger :: Messenger -> IO ()
+listenToMessenger messenger = forever $ do
+  instruction <- takeMVar messenger
+  execute instruction
   return ()
 
-disconnect :: MVar ServerState -> Client -> IO ()
-disconnect state client = do
+execute :: Message -> IO()
+execute (PushMessage { client = (_, conn), message = m }) = WS.sendTextData conn m
 
-  _ <- modifyMVar state $ \s -> do
-    let s' = removeClient client s
-    return (s', s')
+isConnection :: Text -> Bool
+isConnection = T.isPrefixOf connectPrefix
 
-  return ()
+connect :: MVar ServerState -> Client -> IO ServerState
+connect state c = modifyMVar state $ \s -> do
+  let s' = addClient c s
+  return (s', s')
+
+disconnect :: MVar ServerState -> Client -> IO ServerState
+disconnect state c = modifyMVar state $ \s -> do
+  let s' = removeClient c s
+  return (s', s')
 
 -- }}}
