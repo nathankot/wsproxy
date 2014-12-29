@@ -25,16 +25,19 @@ getEnvWithDefault name defaultValue = do
 
 main :: IO ()
 main = do
+
   -- Store state in MVar's
   state <- newMVar newClients
   messenger <- newEmptyMVar :: IO Messenger
 
   -- Find the env
   port <- read <$> getEnvWithDefault "PORT" "3636" :: IO Int
-  websocketPort <- read <$> getEnvWithDefault "PORT" "9160" :: IO Int
+  websocketPort <- read <$> getEnvWithDefault "WEBSOCKET_PORT" "9160" :: IO Int
+  host <- getEnvWithDefault "HOST" "0.0.0.0"
 
   -- Fork a websockets server
-  _ <- forkIO $ WS.runServer "0.0.0.0" websocketPort $ \pending -> do
+  putStrLn $ "Websocket listening on port " ++ show websocketPort
+  _ <- forkIO $ WS.runServer host websocketPort $ \pending -> do
     conn <- WS.acceptRequest pending
     WS.forkPingThread conn 30
     msg <- WS.receiveData conn :: IO T.Text
@@ -50,6 +53,7 @@ main = do
     return ()
 
   -- Initialize scotty for our RESTFUL api
+  putStrLn $ "REST API listening on port " ++ show port
   scotty port $ do
 
     get "/ping" $ do
