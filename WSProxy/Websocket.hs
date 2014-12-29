@@ -1,11 +1,18 @@
 module Websocket
-( application
+( findAllByEmail
+, newServerState
+, listenToMessenger
+, connectPrefix
+, isConnection
+, connect
+, disconnect
+, addClient
+, removeClient
 ) where
 
-import State
+import Types
 import Control.Concurrent.MVar
 import Control.Monad (forever)
-import Control.Exception (finally)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Network.WebSockets as WS
@@ -14,22 +21,6 @@ import qualified Network.WebSockets as WS
 
 connectPrefix :: Text
 connectPrefix = T.pack "Connect:"
-
-application :: MVar ServerState -> Messenger -> WS.ServerApp
-application state messenger pending = do
-    conn <- WS.acceptRequest pending
-    WS.forkPingThread conn 30
-    msg <- WS.receiveData conn :: IO Text
-    if isConnection msg then
-      let email = T.drop (T.length connectPrefix) msg
-          c = (email, conn)
-      in flip finally (disconnect state c) $ do
-        _ <- connect state c
-        listenToMessenger messenger
-    else
-      WS.sendTextData conn $ T.pack "Bad use of protocol"
-
-    return ()
 
 listenToMessenger :: Messenger -> IO ()
 listenToMessenger messenger = forever $ do
@@ -52,5 +43,17 @@ disconnect :: MVar ServerState -> Client -> IO ServerState
 disconnect state c = modifyMVar state $ \s -> do
   let s' = removeClient c s
   return (s', s')
+
+newServerState :: ServerState
+newServerState = []
+
+addClient :: Client -> ServerState -> ServerState
+addClient c clients = c:clients
+
+removeClient :: Client -> ServerState -> ServerState
+removeClient c = filter ((/= fst c) . fst)
+
+findAllByEmail :: Text -> ServerState -> [Client]
+findAllByEmail email = filter (\c -> email == fst c)
 
 -- }}}

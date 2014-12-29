@@ -2,21 +2,27 @@
 
 {-# LANGUAGE OverloadedStrings #-}
 
-import State
+import Types
 import Web.Scotty
-import Util
 import Control.Concurrent.MVar
 import Control.Concurrent (forkIO)
 import Control.Applicative
 import Control.Monad.IO.Class
-import qualified Websocket as SOCKET
+import Websocket
 import qualified Network.WebSockets as WS
 import Network.HTTP.Types
 import qualified Data.Text as T
+import Data.Maybe
+import System.Environment
+import Control.Exception (finally)
+
+getEnvWithDefault :: String -> String -> IO String
+getEnvWithDefault name defaultValue = do
+    x <- lookupEnv name
+    return $ fromMaybe defaultValue x
 
 main :: IO ()
 main = do
-
   -- Store state in MVar's
   state <- newMVar newServerState
   messenger <- newEmptyMVar :: IO Messenger
@@ -26,7 +32,20 @@ main = do
   websocketPort <- read <$> getEnvWithDefault "PORT" "9160" :: IO Int
 
   -- Fork a websockets server
-  _ <- forkIO $ WS.runServer "0.0.0.0" websocketPort $ SOCKET.application state messenger
+  _ <- forkIO $ WS.runServer "0.0.0.0" websocketPort $ \pending -> do
+    conn <- WS.acceptRequest pending
+    WS.forkPingThread conn 30
+    msg <- WS.receiveData conn :: IO T.Text
+    if isConnection msg then
+      let email = T.drop (T.length connectPrefix) msg
+          c = (email, conn)
+      in flip finally (disconnect state c) $ do
+        _ <- connect state c
+        listenToMessenger messenger
+    else
+      WS.sendTextData conn $ T.pack "Bad use of protocol"
+
+    return ()
 
   -- Initialize scotty for our RESTFUL api
   scotty port $ do
