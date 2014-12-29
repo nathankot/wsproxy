@@ -58,15 +58,15 @@ main = do
       clients <- liftIO $ readMVar state
       let email = "test@email.com"
       let c = findAllByEmail email clients
-      _ <- send messenger "Test" c
+      _ <- sendMessage messenger "Test" c
       status status200
       text "Acknowledged"
 
-send ::  MVar Message -> T.Text -> [Client] -> ActionM [()]
-send messenger m clients = do
+sendMessage :: MVar Message -> T.Text -> [Client] -> ActionM [()]
+sendMessage messenger m clients = do
     let messages = map (\c -> PushMessage { client = c, message = m }) clients
-    let sendMessage = liftIO . putMVar messenger
+    let send = liftIO . putMVar messenger
     if null messages
     then fail "No clients to send to"
-    else sequence [sendMessage a | a <- messages]
+    else sequence [send a | a <- messages]
 
