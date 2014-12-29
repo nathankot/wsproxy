@@ -5,13 +5,13 @@
 import WSProxy.Client
 import WSProxy.Messenger
 import Web.Scotty
-import Control.Concurrent.MVar
+import Control.Concurrent.MVar (newMVar, newEmptyMVar, readMVar)
 import Control.Concurrent (forkIO)
-import Control.Applicative
-import Control.Monad.IO.Class
-import Network.HTTP.Types
-import Data.Maybe
-import System.Environment
+import Control.Applicative ((<$>))
+import Control.Monad.IO.Class (liftIO)
+import Network.HTTP.Types (status200)
+import Data.Maybe (fromMaybe)
+import System.Environment (lookupEnv)
 import Control.Exception (finally)
 import qualified Network.WebSockets as WS
 import qualified Data.Text as T
