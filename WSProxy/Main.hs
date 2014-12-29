@@ -60,11 +60,11 @@ main = do
       status status200
       text "pong"
 
-    get "/test" $ do
+    post "/push" $ do
       clients <- liftIO $ readMVar state
-      let email = "test@email.com"
-      let c = findAllByEmail email clients
-      _ <- sendMessage messenger "Test" c
+      email <- param "email" :: ActionM T.Text
+      msg <- param "message" :: ActionM T.Text
+      _ <- sendMessage messenger msg $ findAllByEmail email clients
       status status200
       text "Acknowledged"
 
