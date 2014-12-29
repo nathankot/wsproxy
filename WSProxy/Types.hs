@@ -1,8 +1,8 @@
-module Types
+module WSProxy.Types
 ( Messenger
 , Message (PushMessage, client, message)
 , Client
-, ServerState
+, Clients
 ) where
 
 import Data.Text (Text)
@@ -13,7 +13,7 @@ import Control.Concurrent (MVar)
 type Client = (Text, WS.Connection)
 
 -- | State, representing a list of connected websocket clients
-type ServerState = [Client]
+type Clients = [Client]
 
 type Messenger = MVar Message
 

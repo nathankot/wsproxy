@@ -2,19 +2,19 @@
 
 {-# LANGUAGE OverloadedStrings #-}
 
-import Types
+import WSProxy.Client
+import WSProxy.Messenger
 import Web.Scotty
 import Control.Concurrent.MVar
 import Control.Concurrent (forkIO)
 import Control.Applicative
 import Control.Monad.IO.Class
-import Websocket
-import qualified Network.WebSockets as WS
 import Network.HTTP.Types
-import qualified Data.Text as T
 import Data.Maybe
 import System.Environment
 import Control.Exception (finally)
+import qualified Network.WebSockets as WS
+import qualified Data.Text as T
 
 getEnvWithDefault :: String -> String -> IO String
 getEnvWithDefault name defaultValue = do
@@ -24,7 +24,7 @@ getEnvWithDefault name defaultValue = do
 main :: IO ()
 main = do
   -- Store state in MVar's
-  state <- newMVar newServerState
+  state <- newMVar newClients
   messenger <- newEmptyMVar :: IO Messenger
 
   -- Find the env
@@ -61,12 +61,4 @@ main = do
       _ <- sendMessage messenger "Test" c
       status status200
       text "Acknowledged"
-
-sendMessage :: MVar Message -> T.Text -> [Client] -> ActionM [()]
-sendMessage messenger m clients = do
-    let messages = map (\c -> PushMessage { client = c, message = m }) clients
-    let send = liftIO . putMVar messenger
-    if null messages
-    then fail "No clients to send to"
-    else sequence [send a | a <- messages]
 
