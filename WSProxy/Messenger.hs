@@ -5,13 +5,15 @@ module WSProxy.Messenger
 , sendMessage
 ) where
 
-import WSProxy.Types
-import Web.Scotty (ActionM)
+import Control.Concurrent.MVar (takeMVar, putMVar, MVar)
 import Control.Monad (forever)
 import Control.Monad.IO.Class (liftIO)
-import Control.Concurrent.MVar (takeMVar, putMVar, MVar)
-import qualified Network.WebSockets as WS
 import qualified Data.Text as T
+
+import Web.Scotty (ActionM)
+import qualified Network.WebSockets as WS
+
+import WSProxy.Types
 
 execute :: Message -> IO()
 execute (PushMessage { client = (_, conn), message = m }) = WS.sendTextData conn m

@@ -4,19 +4,21 @@
 
 module WSProxy.Main (main) where
 
+import Control.Applicative ((<$>))
+import Control.Concurrent (forkIO)
+import Control.Concurrent.MVar (newMVar, newEmptyMVar, readMVar)
+import Control.Exception (finally)
+import Control.Monad.IO.Class (liftIO)
+import Data.Maybe (fromMaybe)
+import qualified Data.Text as T
+import Network.HTTP.Types (status200, status400)
+import System.Environment (lookupEnv)
+
+import Web.Scotty
+import qualified Network.WebSockets as WS
+
 import WSProxy.Client
 import WSProxy.Messenger
-import Web.Scotty
-import Control.Concurrent.MVar (newMVar, newEmptyMVar, readMVar)
-import Control.Concurrent (forkIO)
-import Control.Applicative ((<$>))
-import Control.Monad.IO.Class (liftIO)
-import Network.HTTP.Types (status200, status400)
-import Data.Maybe (fromMaybe)
-import System.Environment (lookupEnv)
-import Control.Exception (finally)
-import qualified Network.WebSockets as WS
-import qualified Data.Text as T
 
 getEnvWithDefault :: String -> String -> IO String
 getEnvWithDefault name defaultValue = do

@@ -5,9 +5,10 @@ module WSProxy.Types
 , Clients
 ) where
 
-import Data.Text (Text)
-import qualified Network.WebSockets as WS
 import Control.Concurrent (MVar)
+import Data.Text (Text)
+
+import qualified Network.WebSockets as WS
 
 -- | A connected websocket client
 type Client = (Text, WS.Connection)
