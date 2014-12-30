@@ -2,7 +2,10 @@
 
 {-# LANGUAGE OverloadedStrings #-}
 
-module WSProxy.Main (main) where
+module WSProxy.Main
+( main
+, application
+) where
 
 import Control.Applicative ((<$>))
 import Control.Concurrent (forkIO)
@@ -27,15 +30,17 @@ getEnvWithDefault name defaultValue = do
 
 main :: IO ()
 main = do
-
-  -- Store state in MVar's
-  state <- newMVar newClients
-  messenger <- newEmptyMVar :: IO Messenger
-
   -- Find the env
   port <- read <$> getEnvWithDefault "PORT" "3636" :: IO Int
   websocketPort <- read <$> getEnvWithDefault "WEBSOCKET_PORT" "9160" :: IO Int
   host <- getEnvWithDefault "HOST" "0.0.0.0"
+  application port websocketPort host
+
+application :: Int -> Int -> String -> IO ()
+application port websocketPort host = do
+  -- Store state in MVar's
+  state <- newMVar newClients
+  messenger <- newEmptyMVar :: IO Messenger
 
   -- Fork a websockets server
   putStrLn $ "Websocket listening on port " ++ show websocketPort
@@ -51,7 +56,6 @@ main = do
         listenToMessenger messenger
     else
       WS.sendTextData conn $ T.pack "Bad use of protocol"
-
     return ()
 
   -- Initialize scotty for our RESTFUL api
@@ -73,4 +77,3 @@ main = do
     post "/push" $ do
       status status400
       text "This endpoint requires an email and message"
-
