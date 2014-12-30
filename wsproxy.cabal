@@ -13,7 +13,7 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 library
-  hs-source-dirs: src
+  hs-source-dirs:      src
   default-language:    Haskell2010
   exposed-modules:     WSProxy.Main,
                        WSProxy.Messenger,
@@ -28,6 +28,7 @@ library
                        bytestring
 
 executable wsproxy
+  hs-source-dirs:      src-executable
   main-is:             Main.hs
   build-depends:       base, wsproxy
   default-language:    Haskell2010
