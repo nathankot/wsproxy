@@ -17,6 +17,7 @@ import qualified Data.Text as T
 import Network.HTTP.Types (status200, status400)
 import System.Environment (lookupEnv)
 
+import Network.Wai.Middleware.RequestLogger
 import Web.Scotty
 import qualified Network.WebSockets as WS
 
@@ -61,6 +62,8 @@ application host port websocketPort = do
   -- Initialize scotty for our RESTFUL api
   putStrLn $ "REST API listening on port " ++ show port
   scotty port $ do
+
+    middleware logStdout
 
     get "/ping" $ do
       status status200
