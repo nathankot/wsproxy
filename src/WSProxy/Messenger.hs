@@ -2,7 +2,8 @@ module WSProxy.Messenger
 ( Messenger
 , Message (PushMessage, client, message)
 , listenToMessenger
-, sendMessage
+, pushMessage
+, pullMessage
 ) where
 
 import Control.Concurrent.MVar (takeMVar, putMVar, MVar)
@@ -17,6 +18,7 @@ import WSProxy.Types
 
 execute :: Message -> IO()
 execute (PushMessage { client = (_, conn), message = m }) = WS.sendTextData conn m
+execute (PullMessage { client = (email, _), message = m }) = return ()
 
 listenToMessenger :: Messenger -> IO ()
 listenToMessenger messenger = forever $ do
@@ -24,11 +26,14 @@ listenToMessenger messenger = forever $ do
   execute instruction
   return ()
 
-sendMessage :: MVar Message -> T.Text -> [Client] -> ActionM [()]
-sendMessage messenger m clients = do
+pushMessage :: Messenger -> T.Text -> Clients -> ActionM [()]
+pushMessage messenger m clients = do
     let messages = map (\c -> PushMessage { client = c, message = m }) clients
     let send = liftIO . putMVar messenger
     if null messages
     then fail "No clients to send to"
     else sequence [send a | a <- messages]
 
+pullMessage :: Messenger -> T.Text -> Clients -> IO ()
+pullMessage messenger m clients = do
+    return ()

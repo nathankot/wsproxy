@@ -25,7 +25,9 @@ library
                        http-types,
                        text,
                        transformers,
-                       bytestring
+                       bytestring,
+                       wai,
+                       wai-extra
 
 executable wsproxy
   hs-source-dirs:      src-executable
