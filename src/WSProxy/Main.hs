@@ -34,10 +34,10 @@ main = do
   port <- read <$> getEnvWithDefault "PORT" "3636" :: IO Int
   websocketPort <- read <$> getEnvWithDefault "WEBSOCKET_PORT" "9160" :: IO Int
   host <- getEnvWithDefault "HOST" "0.0.0.0"
-  application port websocketPort host
+  application host port websocketPort
 
-application :: Int -> Int -> String -> IO ()
-application port websocketPort host = do
+application :: String -> Int -> Int -> IO ()
+application host port websocketPort = do
   -- Store state in MVar's
   state <- newMVar newClients
   messenger <- newEmptyMVar :: IO Messenger

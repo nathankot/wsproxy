@@ -34,11 +34,3 @@ executable wsproxy
   default-language:    Haskell2010
   ghc-options:         -threaded +RTS
 
-test-suite tests
-  hs-source-dirs:      test
-  main-is:             Spec.hs
-  type:                exitcode-stdio-1.0
-  default-language:    Haskell2010
-  build-depends:       base,
-                       wsproxy,
-                       hspec

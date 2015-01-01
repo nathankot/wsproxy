@@ -1,1 +1,1 @@
-web: cabal run wsproxy
+web: cabal run
