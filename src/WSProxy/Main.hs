@@ -33,22 +33,23 @@ main = do
   port <- read <$> getEnvWithDefault "PORT" "3636" :: IO Int
   websocketPort <- read <$> getEnvWithDefault "WEBSOCKET_PORT" "9160" :: IO Int
   host <- getEnvWithDefault "HOST" "0.0.0.0"
-  application host port websocketPort
+  server <- getEnvWithDefault "SERVER" ""
+  application host port websocketPort server
 
-application :: String -> Int -> Int -> IO ()
-application host port websocketPort = do
+application :: Host -> Port -> WebsocketPort -> Server -> IO ()
+application host port websocketPort server = do
   -- Store state in MVar's
   state <- newMVar newClients
   messenger <- newEmptyMVar :: IO Messenger
   -- This is the layer that passes messages from server to
   -- client and vice-versa.
-  _ <- (forkIO $ listenToMessenger messenger)
+  _ <- (forkIO $ listenToMessenger messenger server)
   -- Fork a websockets server
-  putStrLn $ "Websocket listening on port " ++ show websocketPort
   _ <- forkIO $ WS.runServer host websocketPort $ wsServer state messenger
+  putStrLn $ "Websocket listening on port " ++ show websocketPort
   -- Initialize scotty for our RESTFUL api
-  putStrLn $ "REST API listening on port " ++ show port
   scotty port $ httpServer state messenger
+  putStrLn $ "REST API listening on port " ++ show port
 
 wsServer :: MVar Clients -> Messenger -> WS.PendingConnection -> IO ()
 wsServer state messenger pending = do

@@ -1,5 +1,9 @@
 module WSProxy.Types
-( Messenger
+( Host
+, Port
+, WebsocketPort
+, Server
+, Messenger
 , Message (ClientMessage, ServerMessage, client, message)
 , Client
 , Clients
@@ -9,6 +13,11 @@ import Control.Concurrent (MVar)
 import Data.Text (Text)
 
 import qualified Network.WebSockets as WS
+
+type Host = String
+type Port = Int
+type WebsocketPort = Port
+type Server = String
 
 -- | A connected websocket client
 type Client = (Text, WS.Connection)

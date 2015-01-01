@@ -20,8 +20,8 @@ execute :: Message -> IO()
 execute (ClientMessage { client = (_, conn), message = m }) = WS.sendTextData conn m
 execute (ServerMessage { client = (email, _), message = m }) = return ()
 
-listenToMessenger :: Messenger -> IO ()
-listenToMessenger messenger = forever $ do
+listenToMessenger :: Messenger -> Server -> IO ()
+listenToMessenger messenger _ = forever $ do
   instruction <- takeMVar messenger
   execute instruction
   return ()
