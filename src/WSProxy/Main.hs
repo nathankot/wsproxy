@@ -63,7 +63,7 @@ wsServer state messenger pending = do
         -- take messages and send them to the server
         forever $ do
           m <- WS.receiveData conn :: IO T.Text
-          pullMessage messenger m [c]
+          pushServerMessage messenger m [c]
     else
       WS.sendTextData conn $ T.pack "Bad use of protocol"
     return ()
@@ -76,7 +76,7 @@ httpServer state messenger = do
       clients <- liftIO $ readMVar state
       email <- param "email" `rescue` const next :: ActionM T.Text
       msg <- param "message" `rescue` const next :: ActionM T.Text
-      _ <- pushMessage messenger msg $ findAllByEmail email clients
+      _ <- pushClientMessage messenger msg $ findAllByEmail email clients
       status status200
       text "Acknowledged"
 
