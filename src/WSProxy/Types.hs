@@ -1,6 +1,6 @@
 module WSProxy.Types
 ( Messenger
-, Message (PushMessage, client, message)
+, Message (PushMessage, PullMessage, client, message)
 , Client
 , Clients
 ) where
@@ -20,5 +20,8 @@ type Messenger = MVar Message
 
 -- | Message for a specific client
 data Message = PushMessage { client :: Client
+                           , message :: Text
+                           }
+             | PullMessage { client :: Client
                            , message :: Text
                            }
