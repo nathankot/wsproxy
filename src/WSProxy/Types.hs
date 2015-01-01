@@ -1,5 +1,6 @@
 module WSProxy.Types
-( Host
+( Environment (Environment, host, port, websocketPort, server)
+, Host
 , Port
 , WebsocketPort
 , Server
@@ -18,6 +19,12 @@ type Host = String
 type Port = Int
 type WebsocketPort = Port
 type Server = String
+
+data Environment = Environment { host :: Host
+                               , port :: Port
+                               , websocketPort :: WebsocketPort
+                               , server :: Server
+                               }
 
 -- | A connected websocket client
 type Client = (Text, WS.Connection)
