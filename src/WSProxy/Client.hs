@@ -43,7 +43,7 @@ addClient c clients = c:clients
 removeClient :: Client -> Clients -> Clients
 removeClient c = filter ((/= fst c) . fst)
 
-findAllByEmail :: T.Text -> Clients -> [Client]
+findAllByEmail :: T.Text -> Clients -> Clients
 findAllByEmail email = filter (\c -> email == fst c)
 
 -- }}}
