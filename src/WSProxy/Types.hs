@@ -10,9 +10,8 @@ module WSProxy.Types
 , Clients
 ) where
 
-import Control.Concurrent (MVar)
-import Data.Text (Text)
-
+import Control.Concurrent           (MVar)
+import Data.Text                    (Text)
 import qualified Network.WebSockets as WS
 
 type Host = String
@@ -20,10 +19,10 @@ type Port = Int
 type WebsocketPort = Port
 type Server = String
 
-data Environment = Environment { host :: Host
-                               , port :: Port
+data Environment = Environment { host          :: Host
+                               , port          :: Port
                                , websocketPort :: WebsocketPort
-                               , server :: Server
+                               , server        :: Server
                                }
 
 -- | A connected websocket client
@@ -35,9 +34,9 @@ type Clients = [Client]
 type Messenger = MVar Message
 
 -- | Message for a specific client
-data Message = ClientMessage { client :: Client
+data Message = ClientMessage { client  :: Client
                              , message :: Text
                              }
-             | ServerMessage { client :: Client
+             | ServerMessage { client  :: Client
                              , message :: Text
                              }
