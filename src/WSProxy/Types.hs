@@ -23,7 +23,7 @@ data Environment = Environment { host          :: Host
                                , port          :: Port
                                , websocketPort :: WebsocketPort
                                , server        :: Server
-                               }
+                               } deriving (Show)
 
 -- | A connected websocket client
 type Client = (Text, WS.Connection)

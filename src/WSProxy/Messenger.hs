@@ -6,7 +6,7 @@ module WSProxy.Messenger
 , pushServerMessage
 ) where
 
-import Control.Concurrent.MVar (takeMVar, putMVar, MVar)
+import Control.Concurrent.MVar (takeMVar, putMVar)
 import Control.Monad (forever)
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.Text as T

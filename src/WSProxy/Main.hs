@@ -6,22 +6,18 @@ module WSProxy.Main
 ) where
 
 import GHC.Conc
-import Control.Applicative ((<$>))
-import Control.Concurrent (forkIO)
-import Control.Concurrent.MVar (MVar, newMVar, newEmptyMVar, readMVar)
-import Control.Exception (finally)
-import Control.Monad (forever)
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Trans.Class (lift)
-import Data.Maybe (fromMaybe)
-import qualified Data.Text as T
-import Network.HTTP.Types (status200, status400)
-import System.Environment (lookupEnv)
-
+import Control.Applicative                  ((<$>))
+import Control.Concurrent.MVar              (MVar, newMVar, newEmptyMVar, readMVar)
+import Control.Exception                    (finally)
+import Control.Monad                        (forever, unless)
+import Control.Monad.IO.Class               (liftIO)
+import Data.Maybe                           (fromMaybe)
+import qualified Data.Text                  as T
+import Network.HTTP.Types                   (status200, status400)
+import System.Environment                   (lookupEnv)
 import Network.Wai.Middleware.RequestLogger
 import Web.Scotty
-import qualified Network.WebSockets as WS
-
+import qualified Network.WebSockets         as WS
 import WSProxy.Client
 import WSProxy.Messenger
 import WSProxy.Types
@@ -42,37 +38,36 @@ main = do
                                , websocketPort = wp
                                , server = s
                                }
-  -- Make it wait forever
+  -- Make it wait forever <3
   forever $ return ()
 
 application :: Environment -> IO [ThreadId]
 application environment = do
+  putStrLn "Starting wsproxy with environment >>"
+  putStrLn $ show environment
   -- Store state in MVar's
   state <- newMVar newClients
   messenger <- newEmptyMVar :: IO Messenger
-  sequence [ -- This is the layer that passes messages from server to client and vice-versa.
-             forkIO $ listenToMessenger messenger $ server environment,
-             -- Fork a websockets server
-             forkIO $ WS.runServer (host environment) (websocketPort environment) $ wsServer state messenger,
-             -- Initialize scotty for our RESTFUL api
-             forkIO $ scotty (port environment) $ httpServer state messenger ]
+  sequence [
+    -- This is the layer that passes messages from server to client and vice-versa.
+    forkIO $ listenToMessenger messenger $ server environment,
+    -- Fork a websockets server
+    forkIO $ WS.runServer (host environment) (websocketPort environment) $ wsServer state messenger,
+    -- Initialize scotty for our RESTFUL api
+    forkIO $ scotty (port environment) $ httpServer state messenger]
 
 wsServer :: MVar Clients -> Messenger -> WS.PendingConnection -> IO ()
 wsServer state messenger pending = do
     conn <- WS.acceptRequest pending
     WS.forkPingThread conn 30
     msg <- WS.receiveData conn :: IO T.Text
-    if isConnection msg then do
-      let email = T.drop (T.length connectPrefix) msg
-      let c = (email, conn)
-      flip finally (disconnect state c) $ do
-          _ <- connect state c
-          -- take messages and send them to the server
-          forever $ do
-            m <- WS.receiveData conn :: IO T.Text
-            pushServerMessage messenger m [c]
-    else WS.sendTextData conn $ T.pack "Bad use of protocol"
-    return ()
+    unless (isConnection msg) $ fail "Bad use of protocol"
+    let email = T.drop (T.length connectPrefix) msg
+    let c = (email, conn)
+    finally (connect state c
+              >> forever (WS.receiveData conn
+                >>= \m -> pushServerMessage messenger m [c]))
+            (disconnect state c) >> return ()
 
 httpServer :: MVar Clients -> Messenger -> ScottyM ()
 httpServer state messenger = do
@@ -90,3 +85,4 @@ httpServer state messenger = do
     post "/push" $ do
       status status400
       text "This endpoint requires an email and message"
+
