@@ -7,7 +7,7 @@ module WSProxy.Main
 
 import GHC.Conc
 import Control.Applicative                  ((<$>))
-import Control.Concurrent.MVar              (MVar, newMVar, newEmptyMVar, readMVar)
+import Control.Concurrent.MVar
 import Control.Exception                    (finally)
 import Control.Monad                        (forever, unless)
 import Control.Monad.IO.Class               (liftIO)
@@ -33,28 +33,25 @@ main = do
   wp <- read <$> getEnvWithDefault "WEBSOCKET_PORT" "9160" :: IO Int
   h <- getEnvWithDefault "HOST" "0.0.0.0"
   s <- getEnvWithDefault "SERVER" ""
-  _ <- application Environment { host = h
+  application Environment { host = h
                                , port = p
                                , websocketPort = wp
                                , server = s
                                }
-  -- Make it wait forever <3
-  forever $ return ()
-
-application :: Environment -> IO [ThreadId]
+application :: Environment -> IO ()
 application environment = do
   putStrLn "Starting wsproxy with environment >>"
   putStrLn $ show environment
   -- Store state in MVar's
   state <- newMVar newClients
   messenger <- newEmptyMVar :: IO Messenger
-  sequence [
-    -- This is the layer that passes messages from server to client and vice-versa.
-    forkIO $ listenToMessenger messenger $ server environment,
-    -- Fork a websockets server
-    forkIO $ WS.runServer (host environment) (websocketPort environment) $ wsServer state messenger,
-    -- Initialize scotty for our RESTFUL api
-    forkIO $ scotty (port environment) $ httpServer state messenger]
+  -- This is the layer that passes messages from server to client and vice-versa.
+  _ <- forkIO $ listenToMessenger messenger $ server environment
+  -- Fork a websockets server
+  _ <- forkIO $ WS.runServer (host environment) (websocketPort environment) $ wsServer state messenger
+  -- Initialize scotty for our RESTFUL api
+  -- Scotty will hold the main thead open
+  scotty (port environment) $ httpServer state messenger
 
 wsServer :: MVar Clients -> Messenger -> WS.PendingConnection -> IO ()
 wsServer state messenger pending = do
