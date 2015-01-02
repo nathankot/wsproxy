@@ -64,10 +64,10 @@ wsServer state messenger pending = do
     unless (isConnection msg) $ fail "Bad use of protocol"
     let email = T.drop (T.length connectPrefix) msg
     let c = (email, conn)
-    finally (connect state c
-              >> forever (WS.receiveData conn
-                >>= \m -> pushServerMessage messenger m [c]))
-            (disconnect state c) >> return ()
+    finally (connect state c -- Connect.
+              >> forever (WS.receiveData conn -- Start receiving messages.
+              >>= \m -> pushServerMessage messenger m [c])) -- And forwarding them.
+            (disconnect state c) >> return () -- Close connection on failure.
 
 httpServer :: MVar Clients -> Messenger -> ScottyM ()
 httpServer state messenger = do
