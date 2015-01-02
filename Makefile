@@ -5,5 +5,5 @@ build: .cabal-sandbox/bin/wed-is-socket
 	cabal install -j
 
 run: build
-	cabal run
+	cabal run wsproxy
 
