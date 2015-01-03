@@ -5,7 +5,7 @@ module WSProxy.Types
 , WebsocketPort
 , Server
 , Messenger
-, Message (ClientMessage, ServerMessage, client, message)
+, Message (ClientMessage, ServerMessage, client, message, messenger)
 , Client
 , Clients
 ) where
@@ -36,7 +36,9 @@ type Messenger = MVar Message
 -- | Message for a specific client
 data Message = ClientMessage { client  :: Client
                              , message :: Text
+                             , messenger :: Messenger
                              }
              | ServerMessage { client  :: Client
                              , message :: Text
+                             , messenger :: Messenger
                              }
