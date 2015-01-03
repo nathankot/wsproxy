@@ -47,7 +47,7 @@ application e = do
     state <- newMVar newClients
     m <- newEmptyMVar :: IO Messenger
     -- This is the layer that passes messages from server to client and vice-versa.
-    _ <- forkIO $ listenToMessenger m $ server e
+    _ <- forkIO $ listenToMessenger m
     -- Fork a websockets server
     _ <- forkIO $ WS.runServer (host e) (websocketPort e)
                 $ wsServer m state (server e)
