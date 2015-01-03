@@ -28,7 +28,6 @@ library
                        text,
                        transformers,
                        bytestring,
-                       wai,
                        wai-extra
 
 executable wsproxy
