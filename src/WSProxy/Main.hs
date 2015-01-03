@@ -6,7 +6,7 @@ module WSProxy.Main
 ) where
 
 import GHC.Conc
-import Control.Applicative                  ((<$>))
+import Control.Applicative
 import Control.Concurrent.MVar
 import Control.Exception                    (finally)
 import Control.Monad                        (forever, unless)
@@ -29,53 +29,60 @@ getEnvWithDefault name defaultValue = do
 
 main :: IO ()
 main = do
-  p <- read <$> getEnvWithDefault "PORT" "3636" :: IO Int
-  wp <- read <$> getEnvWithDefault "WEBSOCKET_PORT" "9160" :: IO Int
-  h <- getEnvWithDefault "HOST" "0.0.0.0"
-  s <- getEnvWithDefault "SERVER" ""
-  application Environment { host = h
-                               , port = p
-                               , websocketPort = wp
-                               , server = s
-                               }
-application :: Environment -> IO ()
-application environment = do
-  putStrLn "Starting wsproxy with environment >>"
-  putStrLn $ show environment
-  -- Store state in MVar's
-  state <- newMVar newClients
-  messenger <- newEmptyMVar :: IO Messenger
-  -- This is the layer that passes messages from server to client and vice-versa.
-  _ <- forkIO $ listenToMessenger messenger $ server environment
-  -- Fork a websockets server
-  _ <- forkIO $ WS.runServer (host environment) (websocketPort environment) $ wsServer state messenger
-  -- Initialize scotty for our RESTFUL api
-  -- Scotty will hold the main thead open
-  scotty (port environment) $ httpServer state messenger
+    p <- read <$> getEnvWithDefault "PORT" "3636" :: IO Int
+    wp <- read <$> getEnvWithDefault "WEBSOCKET_PORT" "9160" :: IO Int
+    h <- getEnvWithDefault "HOST" "0.0.0.0"
+    s <- getEnvWithDefault "SERVER" ""
+    application Environment { host = h
+                            , port = p
+                            , websocketPort = wp
+                            , server = s
+                            }
 
-wsServer :: MVar Clients -> Messenger -> WS.PendingConnection -> IO ()
-wsServer state messenger pending = do
-    conn <- WS.acceptRequest pending
+application :: Environment -> IO ()
+application e = do
+    putStrLn "Starting wsproxy with environment >>"
+    putStrLn $ show e
+    -- Store state in MVar's
+    state <- newMVar newClients
+    m <- newEmptyMVar :: IO Messenger
+    -- This is the layer that passes messages from server to client and vice-versa.
+    _ <- forkIO $ listenToMessenger m $ server e
+    -- Fork a websockets server
+    _ <- forkIO $ WS.runServer (host e) (websocketPort e)
+                $ wsServer m state (server e)
+    -- Initialize scotty for our RESTFUL api
+    -- Scotty will hold the main thead open
+    scotty (port e) $ httpServer state m
+
+wsServer :: Messenger -> MVar Clients -> Server -> WS.PendingConnection -> IO ()
+wsServer me s se p = do
+    conn <- WS.acceptRequest p
     WS.forkPingThread conn 30
     msg <- WS.receiveData conn :: IO T.Text
     unless (isConnection msg) $ fail "Bad use of protocol"
     let email = T.drop (T.length connectPrefix) msg
     let c = (email, conn)
-    finally (connect state c -- Connect.
-              >> forever (WS.receiveData conn -- Start receiving messages.
-              >>= \m -> pushServerMessage messenger m [c])) -- And forwarding them.
-            (disconnect state c) >> return () -- Close connection on failure.
+    finally (connect s c
+            -- Start receiving messages.
+            >> forever (WS.receiveData conn
+            -- And forwarding them.
+            >>= \m -> pushMessage ServerMessage { messenger = me
+                                                , message = m, client = c
+                                                , recipientServer = se }))
+            (disconnect s c) >> return () -- Close connection on failure.
 
 httpServer :: MVar Clients -> Messenger -> ScottyM ()
-httpServer state messenger = do
+httpServer s m = do
 
     middleware logStdout
 
     post "/push" $ do
-      clients <- liftIO $ readMVar state
+      clients <- liftIO $ readMVar s
       email <- param "email" `rescue` const next :: ActionM T.Text
       msg <- param "message" `rescue` const next :: ActionM T.Text
-      _ <- pushClientMessage messenger msg $ findAllByEmail email clients
+      let recipients = findAllByEmail email clients
+      _ <- liftIO $ mapM pushMessage [ClientMessage { client = c, message = msg, messenger = m } | c <- recipients]
       status status200
       text "Acknowledged"
 

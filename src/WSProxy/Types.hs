@@ -1,13 +1,22 @@
 module WSProxy.Types
-( Environment (Environment, host, port, websocketPort, server)
+( Environment ( Environment
+              , host
+              , port
+              , websocketPort
+              , server )
 , Host
 , Port
 , WebsocketPort
 , Server
 , Messenger
-, Message (ClientMessage, ServerMessage, client, message, messenger)
 , Client
 , Clients
+, Message ( ClientMessage
+          , ServerMessage
+          , client
+          , message
+          , messenger
+          , recipientServer )
 ) where
 
 import Control.Concurrent           (MVar)
@@ -41,4 +50,5 @@ data Message = ClientMessage { client  :: Client
              | ServerMessage { client  :: Client
                              , message :: Text
                              , messenger :: Messenger
+                             , recipientServer :: Server
                              }
