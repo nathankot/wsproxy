@@ -2,11 +2,9 @@ module WSProxy.Types
 ( Environment ( Environment
               , host
               , port
-              , websocketPort
               , server )
 , Host
 , Port
-, WebsocketPort
 , Server
 , Messenger
 , Client
@@ -25,7 +23,6 @@ import qualified Network.WebSockets as WS
 
 type Host = String
 type Port = Int
-type WebsocketPort = Port
 
 -- | A server, needs to include the protocol and port with no
 --   trailing slash.
@@ -34,7 +31,6 @@ type Server = String
 
 data Environment = Environment { host          :: Host
                                , port          :: Port
-                               , websocketPort :: WebsocketPort
                                , server        :: Server
                                } deriving (Show)
 

@@ -36,7 +36,6 @@ main = do
     s <- getEnvWithDefault "SERVER" ""
     application Environment { host = h
                             , port = p
-                            , websocketPort = p
                             , server = s
                             }
 
@@ -50,11 +49,29 @@ application e = do
     -- This is the layer that passes messages from server to client and vice-versa.
     void $ forkIO $ listenToMessenger m
     -- Fork a websockets server
-    void $ forkIO $ WS.runServer (host e) (websocketPort e)
+    void $ forkIO $ WS.runServer (host e) (port e)
                   $ wsServer m s (server e)
 
     http <- scottyApp $ httpServer s m
     W.run (port e) $ websocketsOr (WS.ConnectionOptions $ return ()) (wsServer m s (server e)) http
+
+wsServer :: Messenger -> MVar Clients -> Server -> WS.ServerApp
+wsServer me s se p = do
+    conn <- WS.acceptRequest p
+    WS.forkPingThread conn 30
+    msg <- WS.receiveData conn :: IO T.Text
+    unless (isConnection msg) $ fail "Bad use of protocol"
+    WS.sendTextData conn ("Connection acknowledged" :: T.Text)
+    let email = T.drop (T.length connectPrefix) msg
+    let c = (email, conn)
+    void $ finally (connect s c
+           -- Start receiving messages.
+           >> forever (WS.receiveData conn
+           -- And forwarding them.
+           >>= \m -> pushMessage ServerMessage { messenger = me
+                                               , message = m, client = c
+                                               , recipientServer = se }))
+           (disconnect s c) -- Close connection on failure.
 
 httpServer :: MVar Clients -> Messenger -> ScottyM ()
 httpServer s m = do
@@ -75,20 +92,3 @@ httpServer s m = do
       text "This endpoint requires an email and message"
 
 
-wsServer :: Messenger -> MVar Clients -> Server -> WS.ServerApp
-wsServer me s se p = do
-    conn <- WS.acceptRequest p
-    WS.forkPingThread conn 30
-    msg <- WS.receiveData conn :: IO T.Text
-    unless (isConnection msg) $ fail "Bad use of protocol"
-    WS.sendTextData conn ("Connection acknowledged" :: T.Text)
-    let email = T.drop (T.length connectPrefix) msg
-    let c = (email, conn)
-    void $ finally (connect s c
-           -- Start receiving messages.
-           >> forever (WS.receiveData conn
-           -- And forwarding them.
-           >>= \m -> pushMessage ServerMessage { messenger = me
-                                               , message = m, client = c
-                                               , recipientServer = se }))
-           (disconnect s c) -- Close connection on failure.
