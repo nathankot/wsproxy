@@ -67,7 +67,8 @@ wsServer me s se p = do
            >>= \m -> pushMessage ServerMessage { messenger = me
                                                , message = m, client = c
                                                , recipientServer = se }))
-           (disconnect s c) -- Close connection on failure.
+           -- Close connection on failure.
+           (disconnect s c)
 
 httpServer :: Messenger -> MVar Clients -> ScottyM ()
 httpServer m s = do
