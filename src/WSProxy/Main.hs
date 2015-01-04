@@ -34,10 +34,7 @@ main = do
     p <- read <$> getEnvWithDefault "PORT" "3636" :: IO Int
     h <- getEnvWithDefault "HOST" "0.0.0.0"
     s <- getEnvWithDefault "SERVER" ""
-    application Environment { host = h
-                            , port = p
-                            , server = s
-                            }
+    application Environment { host = h, port = p, server = s }
 
 application :: Environment -> IO ()
 application e = do
@@ -48,9 +45,6 @@ application e = do
     m <- newEmptyMVar :: IO Messenger
     -- This is the layer that passes messages from server to client and vice-versa.
     void $ forkIO $ listenToMessenger m
-    -- Fork a websockets server
-    void $ forkIO $ WS.runServer (host e) (port e)
-                  $ wsServer m s (server e)
 
     http <- scottyApp $ httpServer s m
     W.run (port e) $ websocketsOr (WS.ConnectionOptions $ return ()) (wsServer m s (server e)) http
