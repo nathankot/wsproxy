@@ -28,7 +28,8 @@ library
                        text,
                        transformers,
                        bytestring,
-                       wai-extra
+                       wai-extra,
+                       wai-websockets
 
 executable wsproxy
   hs-source-dirs:      src-executable
