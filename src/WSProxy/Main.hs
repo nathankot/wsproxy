@@ -42,7 +42,7 @@ main = do
 application :: Environment -> IO ()
 application e = do
     putStrLn "Starting wsproxy with environment >>"
-    putStrLn $ show e
+    print e
     -- Store state in MVar's
     state <- newMVar newClients
     m <- newEmptyMVar :: IO Messenger
