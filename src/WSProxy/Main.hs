@@ -30,12 +30,11 @@ getEnvWithDefault name defaultValue = do
 main :: IO ()
 main = do
     p <- read <$> getEnvWithDefault "PORT" "3636" :: IO Int
-    wp <- read <$> getEnvWithDefault "WEBSOCKET_PORT" "9160" :: IO Int
     h <- getEnvWithDefault "HOST" "0.0.0.0"
     s <- getEnvWithDefault "SERVER" ""
     application Environment { host = h
                             , port = p
-                            , websocketPort = wp
+                            , websocketPort = p
                             , server = s
                             }
 
