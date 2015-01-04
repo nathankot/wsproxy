@@ -9,7 +9,7 @@ import GHC.Conc
 import Control.Applicative
 import Control.Concurrent.MVar
 import Control.Exception                    (finally)
-import Control.Monad                        (forever, unless, void)
+import Control.Monad                        (forever, unless, void, liftM)
 import Control.Monad.IO.Class               (liftIO)
 import Data.Maybe                           (fromMaybe)
 import qualified Data.Text                  as T
@@ -45,9 +45,11 @@ application e = do
     m <- newEmptyMVar :: IO Messenger
     -- This is the layer that passes messages from server to client and vice-versa.
     void $ forkIO $ listenToMessenger m
-
-    http <- scottyApp $ httpServer s m
-    W.run (port e) $ websocketsOr (WS.ConnectionOptions $ return ()) (wsServer m s (server e)) http
+    let connopt = WS.ConnectionOptions $ return ()
+    -- Run a websockets server followed by an http layer
+    liftM (websocketsOr connopt $ wsServer m s $ server e)
+          (scottyApp $ httpServer m s)
+          >>= W.run (port e)
 
 wsServer :: Messenger -> MVar Clients -> Server -> WS.ServerApp
 wsServer me s se p = do
@@ -67,8 +69,8 @@ wsServer me s se p = do
                                                , recipientServer = se }))
            (disconnect s c) -- Close connection on failure.
 
-httpServer :: MVar Clients -> Messenger -> ScottyM ()
-httpServer s m = do
+httpServer :: Messenger -> MVar Clients -> ScottyM ()
+httpServer m s = do
     middleware logStdout
     get "/" $ status status200
 
