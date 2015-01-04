@@ -28,6 +28,8 @@ library
                        text,
                        transformers,
                        bytestring,
+                       warp,
+                       wai,
                        wai-extra,
                        wai-websockets
 
