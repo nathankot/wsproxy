@@ -76,6 +76,7 @@ httpServer :: MVar Clients -> Messenger -> ScottyM ()
 httpServer s m = do
 
     middleware logStdout
+    get "/" $ status status200
 
     post "/push" $ do
       clients <- liftIO $ readMVar s
