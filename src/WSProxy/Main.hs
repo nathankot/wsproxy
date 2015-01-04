@@ -61,6 +61,7 @@ wsServer me s se p = do
     WS.forkPingThread conn 30
     msg <- WS.receiveData conn :: IO T.Text
     unless (isConnection msg) $ fail "Bad use of protocol"
+    WS.sendTextData conn ("Connection acknowledged" :: T.Text)
     let email = T.drop (T.length connectPrefix) msg
     let c = (email, conn)
     void $ finally (connect s c
