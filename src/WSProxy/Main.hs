@@ -9,7 +9,7 @@ import GHC.Conc
 import Control.Applicative
 import Control.Concurrent.MVar
 import Control.Exception                    (finally)
-import Control.Monad                        (forever, unless)
+import Control.Monad                        (forever, unless, void)
 import Control.Monad.IO.Class               (liftIO)
 import Data.Maybe                           (fromMaybe)
 import qualified Data.Text                  as T
@@ -63,14 +63,14 @@ wsServer me s se p = do
     unless (isConnection msg) $ fail "Bad use of protocol"
     let email = T.drop (T.length connectPrefix) msg
     let c = (email, conn)
-    finally (connect s c
-            -- Start receiving messages.
-            >> forever (WS.receiveData conn
-            -- And forwarding them.
-            >>= \m -> pushMessage ServerMessage { messenger = me
-                                                , message = m, client = c
-                                                , recipientServer = se }))
-            (disconnect s c) >> return () -- Close connection on failure.
+    void $ finally (connect s c
+           -- Start receiving messages.
+           >> forever (WS.receiveData conn
+           -- And forwarding them.
+           >>= \m -> pushMessage ServerMessage { messenger = me
+                                               , message = m, client = c
+                                               , recipientServer = se }))
+           (disconnect s c) -- Close connection on failure.
 
 httpServer :: MVar Clients -> Messenger -> ScottyM ()
 httpServer s m = do
