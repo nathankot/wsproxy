@@ -1,5 +1,5 @@
 .PHONY: run
 
-build: .cabal-sandbox/bin/wed-is-socket
-	cabal install -j
+make: .cabal-sandbox/bin/wed-is-socket
+	cabal install --only-dependencies -j
 	cabal freeze
