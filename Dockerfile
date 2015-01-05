@@ -13,10 +13,13 @@ WORKDIR /app
 RUN cabal sandbox init --sandbox /app/.cabal-sandbox
 RUN cabal update && cabal install cabal-install
 
+# Cache dependencies
 ADD ./wsproxy.cabal /app/wsproxy.cabal
 ADD ./cabal.config /app/cabal.config
-ADD . /app
 RUN cabal install -j --only-dependencies
+
+ADD . /app
+RUN cabal install -j
 RUN cabal build
 
 CMD cabal run wsproxy
