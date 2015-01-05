@@ -1,5 +1,6 @@
 web:
   build: .
+  command: cabal run wsproxy
   volumes:
     - .:/app
   ports:
