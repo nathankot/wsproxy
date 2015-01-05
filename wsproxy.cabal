@@ -20,7 +20,7 @@ library
                        WSProxy.Client,
                        WSProxy.Types
   build-depends:       base >=4.7 && <4.8,
-                       scotty,
+                       scotty >=0.9.0 && <0.10.0,
                        network,
                        websockets,
                        http-conduit,
