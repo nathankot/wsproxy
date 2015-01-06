@@ -1,4 +1,4 @@
-/dist
-/cabal.sandbox.config
-/.cabal-sandbox
-/docsets
+dist
+cabal.sandbox.config
+.cabal-sandbox
+docsets
