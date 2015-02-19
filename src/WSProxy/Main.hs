@@ -5,24 +5,24 @@ module WSProxy.Main
 , application
 ) where
 
-import GHC.Conc
-import Control.Applicative
-import Control.Concurrent.MVar
-import Control.Exception                    (finally)
-import Control.Monad                        (forever, unless, void, liftM)
-import Control.Monad.IO.Class               (liftIO)
-import Data.Maybe                           (fromMaybe)
-import qualified Data.Text                  as T
-import Network.HTTP.Types                   (status200, status400)
-import System.Environment                   (lookupEnv)
-import Network.Wai.Middleware.RequestLogger
-import Network.Wai.Handler.WebSockets
-import qualified Network.Wai.Handler.Warp   as W
-import Web.Scotty
-import qualified Network.WebSockets         as WS
-import WSProxy.Client
-import WSProxy.Messenger
-import WSProxy.Types
+import           Control.Applicative
+import           Control.Concurrent.MVar
+import           Control.Exception (finally)
+import           Control.Monad (forever, unless, void, liftM)
+import           Control.Monad.IO.Class (liftIO)
+import           Data.Maybe (fromMaybe)
+import qualified Data.Text as T
+import           GHC.Conc
+import           Network.HTTP.Types (status200, status400)
+import qualified Network.Wai.Handler.Warp as W
+import           Network.Wai.Handler.WebSockets
+import           Network.Wai.Middleware.RequestLogger
+import qualified Network.WebSockets as WS
+import           System.Environment (lookupEnv)
+import           WSProxy.Client
+import           WSProxy.Messenger
+import           WSProxy.Types
+import           Web.Scotty
 
 getEnvWithDefault :: String -> String -> IO String
 getEnvWithDefault name defaultValue = do
@@ -87,5 +87,3 @@ httpServer m s = do
     post "/push" $ do
       status status400
       text "This endpoint requires an email and message"
-
-
