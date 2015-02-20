@@ -77,7 +77,7 @@ httpServer m s = do
 
     post "/push" $ do
       clients <- liftIO $ readMVar s
-      email <- param "email" `rescue` const next
+      email <- param "identity" `rescue` (\_ -> param "email" `rescue` const next)
       msg <- param "message" `rescue` const next
       let recipients = findAllByEmail email clients
       _ <- liftIO $ mapM pushMessage [ClientMessage { client = c, message = msg, messenger = m } | c <- recipients]
