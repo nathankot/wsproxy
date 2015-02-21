@@ -1,0 +1,9 @@
+{
+  "name": "WSProxy",
+  "description": "Websockets proxy server written in Haskell",
+  "repository": "https://github.com/nathankot/wsproxy",
+  "keywords": ["haskell", "websockets", "proxy"],
+  "env": {
+    "BUILDPACK_URL": "https://github.com/begriffs/heroku-buildpack-ghc.git"
+  }
+}
