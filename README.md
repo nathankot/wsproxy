@@ -25,16 +25,15 @@ git push heroku master
 All configuration is done via `ENV` variables. There is no need to modify the
 source code to use this.
 
-  +-----------------+-------------+----------+
   |Variable         |Description  |Default   |
-  +-----------------+-------------+----------+
+  |-----------------|-------------|----------|
   |PORT             |HTTP port to | `3636`   |
   |                 |listen on, if|          |
   |                 |using Heroku |          |
   |                 |this does not|          |
   |                 |need to be   |          |
   |                 |defined.     |          |
-  +-----------------+-------------+----------+
+  |-----------------|-------------|----------|
   |SERVER           |If you want  | `""`     |
   |                 |wsproxy to   |          |
   |                 |send         |          |
@@ -46,7 +45,6 @@ source code to use this.
   |                 |that wsproxy |          |
   |                 |should talk  |          |
   |                 |to.          |          |
-  +-----------------+-------------+----------+
 
 ## Connecting to wsproxy
 
