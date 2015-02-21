@@ -37,6 +37,6 @@ pushMessage m = putMVar (messenger m) m
 -- Internals
 
 query :: T.Text -> T.Text -> [(ByteString, Maybe ByteString)]
-query e m = [("email", Just e'), ("message", Just m')]
+query e m = [("identity", Just e'), ("email", Just e'), ("message", Just m')]
   where e' = encodeUtf8 e
         m' = encodeUtf8 m
