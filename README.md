@@ -10,8 +10,8 @@ it will translate websocket requests to HTTP.
 
 ## Setup
 
-For non-critical usages, it may be sufficient to run wsproxy on a single-dyno
-Heroku instance. Like so:
+For most use cases, it may be sufficient to run wsproxy on a single-dyno Heroku
+instance. Like so:
 
 ```sh
 git clone https://github.com/nathankot/wsproxy
@@ -22,6 +22,74 @@ git push heroku master
 
 ##  Configuration
 
-@todo: All configuration is done via `ENV` variables. There is no need to modify the
+All configuration is done via `ENV` variables. There is no need to modify the
 source code to use this.
 
+  +-----------------+-------------+----------+
+  |Variable         |Description  |Default   |
+  +-----------------+-------------+----------+
+  |PORT             |HTTP port to | `3636`   |
+  |                 |listen on, if|          |
+  |                 |using Heroku |          |
+  |                 |this does not|          |
+  |                 |need to be   |          |
+  |                 |defined.     |          |
+  +-----------------+-------------+----------+
+  |SERVER           |If you want  | `""`     |
+  |                 |wsproxy to   |          |
+  |                 |send         |          |
+  |                 |websocket    |          |
+  |                 |messages     |          |
+  |                 |upstream, set|          |
+  |                 |this to the  |          |
+  |                 |HTTP endpoint|          |
+  |                 |that wsproxy |          |
+  |                 |should talk  |          |
+  |                 |to.          |          |
+  +-----------------+-------------+----------+
+
+## Connecting to wsproxy
+
+Connections are opened by sending a message in the form of `Connect:<identity>`.
+
+```js
+var ws = new WebSocket("wss://wsproxy.server.com");
+
+ws.onopen = function() {
+  var iden = 'username'; // This is the identifier, it can be anything
+  ws.send('Connect:' + iden);
+}
+
+ws.onmessage = function(o) {
+  var msg = o.data;
+  if (msg === 'Connection acknowledged') {
+    console.log('Websockets connection established');
+  }
+}
+```
+
+## Sending messages downstream
+
+HTTP requests against `wsproxy` get translated to websocket messages. Requests
+should look like this:
+
+```
+POST https://wsproxy.server.com/push?identity=username&message=new:item
+```
+
+All clients with identities of `username` will now get a websockets message `new:item`
+
+## Sending messages upstream
+
+Websocket messages toward `wsproxy` get translated into HTTP requests if
+`SERVER` is defined. A message sent like so:
+
+```js
+ws.send("Any message");
+```
+
+Will be translated to an HTTP requests against `SERVER` like so:
+
+```
+POST https://api.server.com/any/api/endpoint?identity=username&message=Any%20message
+```
