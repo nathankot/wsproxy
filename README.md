@@ -74,7 +74,7 @@ HTTP requests against `wsproxy` get translated to websocket messages. Requests
 should look like this:
 
 ```
-POST https://wsproxy.server.com/push?identity=username&message=new:item
+POST https://wsproxy.server.com/push?identity=username&message=new%3Aitem
 ```
 
 All clients with identities of `username` will now get a websockets message `new:item`
