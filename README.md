@@ -2,6 +2,8 @@
 
 _Websockets proxy server written in Haskell_.
 
+[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
+
 Designed to be run as a standalone server for peculiar use-cases. It was built
 to serve as a proxy between Heroku server and browser. Since Heroku uses a
 random load-balancer, it becomes impossible to establish websocket connections
